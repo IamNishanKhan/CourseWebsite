@@ -107,7 +107,7 @@ export const Courses = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -136,7 +136,7 @@ export const Courses = () => {
 
         {/* Category Tabs */}
         {categories.length > 0 && (
-          <div className="flex justify-center mb-12 overflow-x-auto py-4">
+          <div className="flex justify-center mb-2 overflow-x-auto py-0">
             <div className="inline-flex p-1 space-x-1 bg-white rounded-xl shadow-md">
               {categories.map((category) => (
                 <motion.button
