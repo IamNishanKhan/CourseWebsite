@@ -1,0 +1,19 @@
+Here is the list of API endpoints in a single line format:
+
+POST {{baseUrl}}/api/accounts/register/
+POST http://127.0.0.1:8000/api/accounts/login/
+PUT {{baseUrl}}/api/accounts/update/
+POST {{baseUrl}}/api/accounts/change-password/
+POST {{baseUrl}}/api/accounts/logout/
+GET {{baseUrl}}/api/categories/
+POST {{baseUrl}}/api/categories/
+POST {{baseUrl}}/api/courses/
+GET {{baseUrl}}/api/courses/
+GET {{baseUrl}}/api/enrollments/
+POST {{baseUrl}}/api/enrollments/
+GET {{baseUrl}}/api/modules/
+POST {{baseUrl}}/api/modules/
+GET {{baseUrl}}/api/lessons/
+POST {{baseUrl}}/api/lessons/
+GET {{baseUrl}}/api/payments/
+POST {{baseUrl}}/api/payments/
