@@ -28,9 +28,15 @@ interface User {
 
 interface Course {
   course_id: number;
-  title: string;
-  thumbnail: string | null;
+  instructor_id: number;
   instructor_name: string;
+  title: string;
+  description: string;
+  price: string;
+  thumbnail: string;
+  created_at: string;
+  updated_at: string;
+  category: number;
 }
 
 interface Enrollment {
@@ -40,38 +46,35 @@ interface Enrollment {
 }
 
 export const Dashboard = () => {
-  const { isAuthenticated, accessToken } = useAuth();
+  const { isAuthenticated, accessToken, user } = useAuth(); // Add user here
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchEnrollments = async () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          "http://127.0.0.1:8000/api/accounts/dashboard/",
+          "http://127.0.0.1:8000/api/enrollments/",
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },
           }
         );
-
-        setUser(response.data.user);
-        setEnrollments(response.data.enrollments);
+        setEnrollments(response.data);
       } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-        setError("Failed to load dashboard data.");
+        console.error("Error fetching enrollments:", err);
+        setError("Failed to load enrolled courses.");
       } finally {
         setLoading(false);
       }
     };
 
     if (isAuthenticated) {
-      fetchDashboardData();
+      fetchEnrollments();
     }
   }, [isAuthenticated, accessToken]);
 
@@ -79,9 +82,23 @@ export const Dashboard = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const handleCourseClick = (courseId: number) => {
-    navigate(`/course/${courseId}/progress`);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse">
+            {/* Loading skeleton */}
+            <div className="h-48 bg-gray-200 rounded-2xl mb-8"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-gray-200 h-64 rounded-xl"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -161,61 +178,29 @@ export const Dashboard = () => {
               </h2>
               <p className="text-gray-600 mt-1">Continue where you left off</p>
             </div>
-            <Link
-              to="/courses"
-              className="flex items-center text-indigo-600 hover:text-indigo-700 font-medium bg-indigo-50 px-4 py-2 rounded-lg transition-colors"
-            >
-              Explore More Courses
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Link>
           </div>
 
-          {loading ? (
-            <div className="text-center py-12">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              >
-                <GraduationCap className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
-              </motion.div>
-              <p className="text-gray-600">Loading your learning journey...</p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12 bg-red-50 rounded-2xl">
-              <div className="max-w-md mx-auto">
-                <p className="text-red-600 mb-2">{error}</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="text-red-600 underline hover:text-red-700"
-                >
-                  Try again
-                </button>
-              </div>
+          {error ? (
+            <div className="text-center py-8">
+              <p className="text-red-600">{error}</p>
             </div>
           ) : enrollments.length === 0 ? (
-            <div className="text-center py-12 bg-indigo-50 rounded-2xl">
-              <BookOpen className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Start Your Learning Journey
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Explore our courses and begin your educational adventure
-              </p>
+            <div className="text-center py-8">
+              <p className="text-gray-600">You haven't enrolled in any courses yet.</p>
               <Link
                 to="/courses"
-                className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                className="mt-4 inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
               >
                 Browse Courses
-                <ChevronRight className="w-4 h-4 ml-1" />
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {enrollments.map((enrollment) => (
                 <EnrolledCourseCard
                   key={enrollment.enrollment_id}
                   enrollment={enrollment}
-                  onCourseClick={handleCourseClick}
+                  onCourseClick={(courseId) => navigate(`/course/${courseId}/progress`)}
                 />
               ))}
             </div>

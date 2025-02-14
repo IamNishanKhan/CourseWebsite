@@ -111,7 +111,7 @@ export const Navbar = () => {
               </>
             ) : (
               <div className="flex items-center space-x-4">
-                <Link to="/login" className="text-gray-700 hover:text-indigo-600 transition-colors">
+                <Link to="/login" className="inline-block px-6 py-2 text-gray-700 border border-gray-300 rounded-md hover:text-indigo-600 hover:border-indigo-600 transition-colors duration-300 ease-in-out">
                   Login
                 </Link>
                 <Link to="/signup" className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">

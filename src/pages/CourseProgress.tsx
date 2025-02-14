@@ -1,131 +1,108 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 import {
   BookOpen,
   CheckCircle,
   Clock,
-  Trophy,
   Target,
-  Calendar,
   PlayCircle,
   XCircle,
-  BarChart,
-  Award,
-  Star,
-  Timer,
-  BookMarked,
   GraduationCap,
-  Zap
 } from 'lucide-react';
 
-// Mock data for the course progress
-const courseData = {
-  id: 'web-development',
-  title: 'Web Development Masterclass',
-  instructor: 'John Smith',
-  progress: 65,
-  totalHours: 48,
-  completedHours: 31,
-  lastAccessed: '2024-03-15',
-  nextDeadline: '2024-03-20',
-  certificateProgress: 65,
-  modules: [
-    {
-      id: 1,
-      title: 'Introduction to Web Development',
-      completed: true,
-      lessons: [
-        { id: 1, title: 'Welcome to the Course', completed: true, duration: '15 min' },
-        { id: 2, title: 'Setting Up Your Environment', completed: true, duration: '25 min' },
-        { id: 3, title: 'Web Development Overview', completed: true, duration: '30 min' }
-      ]
-    },
-    {
-      id: 2,
-      title: 'HTML & CSS Fundamentals',
-      completed: true,
-      lessons: [
-        { id: 4, title: 'HTML Basics', completed: true, duration: '45 min' },
-        { id: 5, title: 'CSS Styling', completed: true, duration: '50 min' },
-        { id: 6, title: 'Responsive Design', completed: true, duration: '40 min' }
-      ]
-    },
-    {
-      id: 3,
-      title: 'JavaScript Essentials',
-      completed: false,
-      lessons: [
-        { id: 7, title: 'JavaScript Basics', completed: true, duration: '45 min' },
-        { id: 8, title: 'DOM Manipulation', completed: false, duration: '40 min' },
-        { id: 9, title: 'Events and Listeners', completed: false, duration: '35 min' }
-      ]
-    },
-    {
-      id: 4,
-      title: 'React Framework',
-      completed: false,
-      lessons: [
-        { id: 10, title: 'React Introduction', completed: false, duration: '30 min' },
-        { id: 11, title: 'Components and Props', completed: false, duration: '45 min' },
-        { id: 12, title: 'State Management', completed: false, duration: '50 min' }
-      ]
-    }
-  ],
-  achievements: [
-    { id: 1, title: 'Fast Learner', description: 'Completed 3 lessons in one day', icon: Zap },
-    { id: 2, title: 'Perfect Score', description: 'Scored 100% in module quiz', icon: Award },
-    { id: 3, title: 'Consistent', description: '7-day study streak', icon: Target }
-  ],
-  skills: [
-    { name: 'HTML', progress: 90 },
-    { name: 'CSS', progress: 85 },
-    { name: 'JavaScript', progress: 70 },
-    { name: 'React', progress: 45 }
-  ]
-};
+interface Module {
+  module_id: number;
+  title: string;
+  order: number;
+  course_id: number;
+  course_name: string;
+  created_at: string;
+  updated_at: string;
+}
 
-const ProgressCircle = ({ progress }: { progress: number }) => (
-  <div className="relative w-32 h-32">
-    <svg className="w-full h-full" viewBox="0 0 100 100">
-      <circle
-        className="text-gray-200 stroke-current"
-        strokeWidth="10"
-        cx="50"
-        cy="50"
-        r="40"
-        fill="transparent"
-      />
-      <motion.circle
-        className="text-indigo-600 stroke-current"
-        strokeWidth="10"
-        strokeLinecap="round"
-        cx="50"
-        cy="50"
-        r="40"
-        fill="transparent"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: progress / 100 }}
-        transition={{ duration: 1, ease: "easeInOut" }}
-        style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }}
-      />
-      <text
-        x="50"
-        y="50"
-        className="text-2xl font-bold"
-        textAnchor="middle"
-        dy="8"
-        fill="currentColor"
-      >
-        {progress}%
-      </text>
-    </svg>
-  </div>
-);
+interface Lesson {
+  lesson_id: number;
+  title: string;
+  video_url: string;
+  duration: number;
+  order: number;
+  created_at: string;
+  updated_at: string;
+  module: number;
+}
 
 export const CourseProgress = () => {
   const { id } = useParams();
-  const course = courseData; // In real app, fetch based on id
+  const { accessToken } = useAuth();
+  const [modules, setModules] = useState<Module[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCourseData = async () => {
+      try {
+        setLoading(true);
+        const [modulesResponse, lessonsResponse] = await Promise.all([
+          axios.get('http://127.0.0.1:8000/api/modules/', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          }),
+          axios.get('http://127.0.0.1:8000/api/lessons/', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          })
+        ]);
+
+        // Filter modules for the current course
+        const courseModules = modulesResponse.data.filter(
+          (module: Module) => module.course_id === Number(id)
+        ).sort((a: Module, b: Module) => a.order - b.order);
+
+        setModules(courseModules);
+        setLessons(lessonsResponse.data.sort((a: Lesson, b: Lesson) => a.order - b.order));
+      } catch (err) {
+        console.error('Error fetching course data:', err);
+        setError('Failed to load course content');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchCourseData();
+    }
+  }, [id, accessToken]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse">
+            <div className="h-32 bg-gray-200 rounded-xl mb-8"></div>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-24 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">
+            <p className="text-red-600">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -148,170 +125,64 @@ export const CourseProgress = () => {
                 <GraduationCap className="w-16 h-16 text-indigo-600" />
               </motion.div>
               <div className="flex-grow text-center md:text-left">
-                <h1 className="text-3xl font-bold text-white md:text-gray-900">{course.title}</h1>
-                <p className="text-gray-200 md:text-gray-600">Instructor: {course.instructor}</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg flex items-center space-x-2 cursor-pointer"
-                >
-                  <PlayCircle className="w-5 h-5" />
-                  <span>Continue Learning</span>
-                </motion.div>
+                <h1 className="text-3xl font-bold text-white md:text-gray-900">
+                  {modules[0]?.course_name || 'Course Content'}
+                </h1>
               </div>
             </div>
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Modules Progress */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-2 space-y-8"
-          >
-            {/* Module List */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Course Modules</h2>
-              <div className="space-y-6">
-                {course.modules.map((module, index) => (
-                  <motion.div
-                    key={module.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="border border-gray-100 rounded-lg p-4"
-                  >
-                    <div className="flex items-center justify-between mb-4">
+        {/* Modules and Lessons */}
+        <div className="space-y-6">
+          {modules.map((module) => (
+            <motion.div
+              key={module.module_id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl shadow-lg p-6"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <Target className="w-6 h-6 text-indigo-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {module.title}
+                  </h3>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                {lessons
+                  .filter((lesson) => lesson.module === module.module_id)
+                  .map((lesson) => (
+                    <motion.div
+                      key={lesson.lesson_id}
+                      whileHover={{ x: 4 }}
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50"
+                    >
                       <div className="flex items-center space-x-3">
-                        {module.completed ? (
-                          <CheckCircle className="w-6 h-6 text-green-500" />
-                        ) : (
-                          <motion.div
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ repeat: Infinity, duration: 2 }}
-                          >
-                            <Target className="w-6 h-6 text-indigo-600" />
-                          </motion.div>
-                        )}
-                        <h3 className="text-lg font-semibold text-gray-900">{module.title}</h3>
+                        <BookOpen className="w-5 h-5 text-indigo-500" />
+                        <span className="text-gray-700">{lesson.title}</span>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        module.completed ? 'bg-green-100 text-green-800' : 'bg-indigo-100 text-indigo-800'
-                      }`}>
-                        {module.completed ? 'Completed' : 'In Progress'}
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      {module.lessons.map((lesson) => (
-                        <motion.div
-                          key={lesson.id}
-                          whileHover={{ x: 4 }}
-                          className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50"
+                      <div className="flex items-center space-x-3">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-500">
+                          {lesson.duration} min
+                        </span>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          className="px-3 py-1 text-sm text-indigo-600 border border-indigo-600 
+                                   rounded-full hover:bg-indigo-50"
+                          onClick={() => window.open(lesson.video_url, '_blank')}
                         >
-                          <div className="flex items-center space-x-3">
-                            {lesson.completed ? (
-                              <CheckCircle className="w-5 h-5 text-green-500" />
-                            ) : (
-                              <XCircle className="w-5 h-5 text-gray-400" />
-                            )}
-                            <span className={`${lesson.completed ? 'text-gray-900' : 'text-gray-500'}`}>
-                              {lesson.title}
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <span className="text-sm text-gray-500">{lesson.duration}</span>
-                            {!lesson.completed && (
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                className="px-3 py-1 text-sm text-indigo-600 border border-indigo-600 
-                                         rounded-full hover:bg-indigo-50"
-                              >
-                                Start
-                              </motion.button>
-                            )}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                ))}
+                          Start
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  ))}
               </div>
-            </div>
-          </motion.div>
-
-          {/* Right Column - Progress Stats */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-8"
-          >
-            {/* Overall Progress */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Overall Progress</h3>
-              <div className="flex justify-center mb-6">
-                <ProgressCircle progress={course.progress} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-indigo-600">{course.completedHours}</p>
-                  <p className="text-sm text-gray-500">Hours Completed</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-indigo-600">{course.totalHours}</p>
-                  <p className="text-sm text-gray-500">Total Hours</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Skills Progress */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Skills Progress</h3>
-              <div className="space-y-4">
-                {course.skills.map((skill, index) => (
-                  <div key={index}>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-700">{skill.name}</span>
-                      <span className="text-sm font-medium text-indigo-600">{skill.progress}%</span>
-                    </div>
-                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${skill.progress}%` }}
-                        transition={{ duration: 1, delay: index * 0.1 }}
-                        className="h-full bg-indigo-600 rounded-full"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Achievements */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Achievements</h3>
-              <div className="space-y-4">
-                {course.achievements.map((achievement, index) => (
-                  <motion.div
-                    key={achievement.id}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="p-2 bg-indigo-100 rounded-lg">
-                      <achievement.icon className="w-5 h-5 text-indigo-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{achievement.title}</p>
-                      <p className="text-sm text-gray-500">{achievement.description}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </div>
