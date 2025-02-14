@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { CourseProgress } from '../pages/CourseProgress';
 import { Dashboard } from '../pages/Dashboard';
+import { Settings } from '../pages/Settings';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -20,5 +21,9 @@ export const privateRoutes = [
   {
     path: 'dashboard',
     element: <PrivateRoute><Dashboard /></PrivateRoute>,
+  },
+  {
+    path: 'settings',
+    element: <PrivateRoute><Settings /></PrivateRoute>,
   },
 ];

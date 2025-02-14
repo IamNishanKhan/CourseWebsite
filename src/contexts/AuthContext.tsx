@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface User {
   id: number;
@@ -21,6 +21,7 @@ interface AuthContextType {
   signup: (name: string, email: string, password: string, phone: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -33,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Load stored auth state on mount
   useEffect(() => {
-    const storedAuth = localStorage.getItem('auth');
+    const storedAuth = localStorage.getItem("auth");
     if (storedAuth) {
       const { user, accessToken, refreshToken, isAuthenticated } = JSON.parse(storedAuth);
       setUser(user);
@@ -45,12 +46,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Save auth state to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem('auth', JSON.stringify({
-      user,
-      accessToken,
-      refreshToken,
-      isAuthenticated
-    }));
+    localStorage.setItem(
+      "auth",
+      JSON.stringify({
+        user,
+        accessToken,
+        refreshToken,
+        isAuthenticated,
+      })
+    );
   }, [user, accessToken, refreshToken, isAuthenticated]);
 
   const login = async (email: string, password: string) => {
@@ -94,8 +98,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (name: string, email: string, password: string, phone: string) => {
     try {
-      const [first_name, ...lastNameParts] = name.trim().split(' ');
-      const last_name = lastNameParts.join(' ') || ''; // Provide empty string if no last name
+      const [first_name, ...lastNameParts] = name.trim().split(" ");
+      const last_name = lastNameParts.join(" ") || ""; // Provide empty string if no last name
 
       const payload = {
         first_name,
@@ -103,27 +107,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password,
         phone,
-        role: "student"
+        role: "student",
       };
-
-      console.log('Registration payload:', payload); // Debug log
 
       const registerResponse = await fetch("http://127.0.0.1:8000/api/accounts/register/", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
 
       const responseData = await registerResponse.json();
-      console.log('Server response:', responseData); // Debug log
 
       if (!registerResponse.ok) {
         // Extract specific error message from response
-        const errorMessage = responseData.detail || 
-                           Object.values(responseData).flat().join(', ') ||
-                           "Registration failed";
+        const errorMessage = responseData.detail || Object.values(responseData).flat().join(", ") || "Registration failed";
         throw new Error(errorMessage);
       }
 
@@ -150,7 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAccessToken(null);
       setRefreshToken(null);
       setIsAuthenticated(false);
-      localStorage.removeItem('auth');
+      localStorage.removeItem("auth");
     }
   };
 
@@ -193,6 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signup,
     logout,
     refreshAccessToken,
+    setUser, // Add this
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -201,7 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
