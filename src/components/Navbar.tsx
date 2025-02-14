@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GraduationCap, LogOut, BookOpen, Settings } from "lucide-react"; // Add Settings icon
 import { Link } from "react-router-dom";
@@ -17,6 +17,20 @@ interface UserProfile {
 export const Navbar = () => {
   const { isAuthenticated, logout, accessToken, refreshToken, user } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Handle logout
   const handleLogout = async () => {
@@ -66,7 +80,7 @@ export const Navbar = () => {
                 <Link to="/dashboard" className="text-gray-700 hover:text-indigo-600 transition-colors">
                   Dashboard
                 </Link>
-                <div className="relative">
+                <div className="relative" ref={modalRef}>
                   <motion.button onClick={() => setIsProfileOpen(!isProfileOpen)} className="relative p-2 rounded-full bg-white shadow-sm">
                     {user.profile_picture ? <img src={user.profile_picture} alt="Profile" className="w-10 h-10 rounded-full object-cover" /> : <img src="https://cdn-icons-png.flaticon.com/512/354/354637.png" alt="Default Profile" className="w-10 h-10 rounded-full object-cover" />}
                   </motion.button>
