@@ -1,37 +1,28 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { GraduationCap, User, Mail, Lock, Phone } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext"; // Updated import
-import { Navigate, Link } from "react-router-dom";
+import { GraduationCap, Mail, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Input } from "../components/form/Input";
+import { toast } from "sonner";
 
-export const Signup = () => {
-  const [name, setName] = useState("");
+export const ForgotPassword = () => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signup, isAuthenticated } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
 
+    // Placeholder for future backend implementation
     try {
-      await signup(name, email, password, phone);
-    } catch (err: any) {
-      console.error("Signup failed:", err.response ? err.response.data : err.message);
-      setError(err.response?.data?.detail || "Registration failed");
+      toast.info("This feature will be implemented soon!");
+      // Here you'll implement the password reset logic
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
-
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -43,30 +34,13 @@ export const Signup = () => {
               <span className="text-2xl font-bold text-gray-900">BM Academy</span>
             </motion.div>
           </Link>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">Create your account</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Sign in
-            </Link>
-          </p>
+          <h2 className="mt-6 text-3xl font-bold text-gray-900">Reset Password</h2>
+          <p className="mt-2 text-sm text-gray-600">Enter your email address and we'll send you instructions to reset your password.</p>
         </div>
-
-        {error && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 text-red-600 p-3 rounded-md text-sm text-center">
-            {error}
-          </motion.div>
-        )}
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            <Input id="name" type="text" label="Full Name" value={name} onChange={setName} icon={<User className="h-5 w-5 text-gray-400" />} placeholder="John Doe" required />
-
             <Input id="email" type="email" label="Email address" value={email} onChange={setEmail} icon={<Mail className="h-5 w-5 text-gray-400" />} placeholder="you@example.com" required />
-
-            <Input id="phone" type="tel" label="Phone Number" value={phone} onChange={setPhone} icon={<Phone className="h-5 w-5 text-gray-400" />} placeholder="01XXXXXXXXX" required />
-
-            <Input id="password" type="password" label="Password" value={password} onChange={setPassword} icon={<Lock className="h-5 w-5 text-gray-400" />} placeholder="••••••••" required />
           </div>
 
           <motion.button
@@ -79,8 +53,15 @@ export const Signup = () => {
                      ${isLoading ? "opacity-75 cursor-not-allowed" : "hover:bg-indigo-700"}
                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
           >
-            {isLoading ? "Creating account..." : "Create Account"}
+            {isLoading ? "Sending..." : "Send Reset Instructions"}
           </motion.button>
+
+          <div className="text-center">
+            <Link to="/login" className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-500">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Login
+            </Link>
+          </div>
         </form>
       </motion.div>
     </div>

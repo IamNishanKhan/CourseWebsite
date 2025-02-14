@@ -4,7 +4,7 @@ import { GraduationCap, Mail, Lock } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext"; // Updated import
 import { Navigate, Link, useNavigate } from "react-router-dom";
 import { Input } from "../components/form/Input";
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -17,7 +17,7 @@ export const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
 
@@ -42,7 +42,7 @@ export const Login = () => {
           <Link to="/" className="inline-block">
             <motion.div whileHover={{ scale: 1.05 }} className="flex items-center justify-center space-x-2">
               <GraduationCap className="h-12 w-12 text-indigo-600" />
-              <span className="text-2xl font-bold text-gray-900">EduPro</span>
+              <span className="text-2xl font-bold text-gray-900">BM Academy</span>
             </motion.div>
           </Link>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Welcome back</h2>
@@ -62,17 +62,7 @@ export const Login = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            <Input 
-              id="email" 
-              type="email" 
-              label="Email address" 
-              value={email} 
-              onChange={setEmail} 
-              icon={<Mail className="h-5 w-5 text-gray-400" />} 
-              placeholder="you@example.com" 
-              required 
-              error={emailError} 
-            />
+            <Input id="email" type="email" label="Email address" value={email} onChange={setEmail} icon={<Mail className="h-5 w-5 text-gray-400" />} placeholder="you@example.com" required error={emailError} />
 
             <Input id="password" type="password" label="Password" value={password} onChange={setPassword} icon={<Lock className="h-5 w-5 text-gray-400" />} placeholder="••••••••" required />
           </div>
@@ -86,9 +76,9 @@ export const Login = () => {
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
                 Forgot your password?
-              </a>
+              </Link>
             </div>
           </div>
 

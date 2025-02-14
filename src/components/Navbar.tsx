@@ -4,7 +4,7 @@ import { GraduationCap, LogOut, BookOpen, Settings } from "lucide-react"; // Add
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext"; // Updated import
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
 interface UserProfile {
   id: number;
@@ -49,7 +49,7 @@ export const Navbar = () => {
           <Link to="/">
             <motion.div whileHover={{ scale: 1.05 }} className="flex items-center space-x-2">
               <GraduationCap className="h-8 w-8 text-indigo-600" />
-              <span className="text-xl font-bold text-gray-900">EduPro</span>
+              <span className="text-xl font-bold text-gray-900">BM Academy</span>
             </motion.div>
           </Link>
 
@@ -68,11 +68,7 @@ export const Navbar = () => {
                 </Link>
                 <div className="relative">
                   <motion.button onClick={() => setIsProfileOpen(!isProfileOpen)} className="relative p-2 rounded-full bg-white shadow-sm">
-                    {user.profile_picture ? (
-                      <img src={user.profile_picture} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
-                    ) : (
-                      <img src="https://cdn-icons-png.flaticon.com/512/354/354637.png" alt="Default Profile" className="w-10 h-10 rounded-full object-cover" />
-                    )}
+                    {user.profile_picture ? <img src={user.profile_picture} alt="Profile" className="w-10 h-10 rounded-full object-cover" /> : <img src="https://cdn-icons-png.flaticon.com/512/354/354637.png" alt="Default Profile" className="w-10 h-10 rounded-full object-cover" />}
                   </motion.button>
 
                   <AnimatePresence>
@@ -80,13 +76,7 @@ export const Navbar = () => {
                       <motion.div className="absolute right-0 mt-3 w-72 origin-top-right bg-white rounded-xl shadow-xl ring-1 ring-black ring-opacity-5">
                         <div className="p-4">
                           <div className="flex items-center space-x-3">
-                            <div className="flex-shrink-0">
-                              {user.profile_picture ? (
-                                <img src={user.profile_picture} alt="Profile" className="w-12 h-12 rounded-full object-cover" />
-                              ) : (
-                                <img src="https://cdn-icons-png.flaticon.com/512/354/354637.png" alt="Default Profile" className="w-12 h-12 rounded-full object-cover" />
-                              )}
-                            </div>
+                            <div className="flex-shrink-0">{user.profile_picture ? <img src={user.profile_picture} alt="Profile" className="w-12 h-12 rounded-full object-cover" /> : <img src="https://cdn-icons-png.flaticon.com/512/354/354637.png" alt="Default Profile" className="w-12 h-12 rounded-full object-cover" />}</div>
                             <div>
                               <p className="text-sm font-semibold text-gray-900">
                                 {user.first_name} {user.last_name}
@@ -120,9 +110,14 @@ export const Navbar = () => {
                 </div>
               </>
             ) : (
-              <Link to="/login" className="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                Login
-              </Link>
+              <div className="flex items-center space-x-4">
+                <Link to="/login" className="text-gray-700 hover:text-indigo-600 transition-colors">
+                  Login
+                </Link>
+                <Link to="/signup" className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+                  Sign Up
+                </Link>
+              </div>
             )}
           </div>
         </div>

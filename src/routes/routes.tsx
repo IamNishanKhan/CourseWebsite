@@ -6,10 +6,11 @@ import { Signup } from '../pages/Signup';
 import { Courses } from '../pages/Courses';
 import { CourseDetails } from '../pages/CourseDetails';
 import { privateRoutes } from './privateRoutes';
+import { ForgotPassword } from '../pages/ForgotPassword';
 
 export const routes = [
   {
-    path: '/',
+    path: "/",
     element: <MainLayout />,
     children: [
       {
@@ -31,6 +32,10 @@ export const routes = [
       {
         path: 'course/:id',
         element: <CourseDetails />,
+      },
+      {
+        path: "forgot-password",
+        element: <ForgotPassword />,
       },
       ...privateRoutes,
     ],
