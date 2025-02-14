@@ -73,17 +73,12 @@ export const Input: React.FC<InputProps> = ({
           </div>
         )}
         <div className="relative">
-          {initialType === 'tel' && (
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-              +88
-            </span>
-          )}
           <input
             id={id}
             type={type}
             value={value}
             onChange={handleChange}
-            className={`block w-full ${icon ? 'pl-10' : ''} 
+            className={`block w-full ${icon ? 'pl-3' : ''} 
                      ${initialType === 'tel' ? 'pl-12' : ''}
                      pr-3 py-2 border border-gray-300 rounded-md
                      focus:outline-none focus:ring-indigo-500 focus:border-indigo-500

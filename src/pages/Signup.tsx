@@ -69,13 +69,13 @@ export const Signup = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            <Input id="first_name" type="text" label="First Name" value={firstName} onChange={setFirstName} icon={<User className="h-5 w-5 text-gray-400" />} placeholder="John" required />
+            <Input id="first_name" type="text" label="First Name" value={firstName} onChange={setFirstName} icon={<User className="h-5 w-5 text-gray-400" />} placeholder="First Name" required />
 
-            <Input id="last_name" type="text" label="Last Name" value={lastName} onChange={setLastName} icon={<User className="h-5 w-5 text-gray-400" />} placeholder="Doe" required />
+            <Input id="last_name" type="text" label="Last Name" value={lastName} onChange={setLastName} icon={<User className="h-5 w-5 text-gray-400" />} placeholder="Last Name" required />
 
-            <Input id="email" type="email" label="Email address" value={email} onChange={setEmail} icon={<Mail className="h-5 w-5 text-gray-400" />} placeholder="you@example.com" required />
+            <Input id="email" type="email" label="Email address" value={email} onChange={setEmail} icon={<Mail className="h-5 w-5 text-gray-400" />} placeholder="you@email.com" required />
 
-            <Input id="phone" type="tel" label="Phone Number" value={phone} onChange={setPhone} icon={<Phone className="h-5 w-5 text-gray-400" />} placeholder="01XXXXXXXXX" required />
+            <Input id="phone" type="tel" label="Phone Number" value={phone} onChange={setPhone} icon={<Phone className="h-5 w-5 text-gray-400" />} placeholder="+880XXXXXXXXXX" required />
 
             <Input id="password" type="password" label="Password" value={password} onChange={setPassword} icon={<Lock className="h-5 w-5 text-gray-400" />} placeholder="••••••••" required />
 
