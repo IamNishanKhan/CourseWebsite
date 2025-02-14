@@ -11,7 +11,7 @@ import {
   Zap,
   GraduationCap,
 } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext"; // Updated import
+import { useAuth } from "../contexts/AuthContext";
 import { Navigate, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { EnrolledCourseCard } from "../components/EnrolledCourseCard";
@@ -21,6 +21,7 @@ interface User {
   email: string;
   first_name: string;
   last_name: string;
+  bio: string;
   phone: string;
   role: string;
   profile_picture: string | null;
@@ -49,13 +50,11 @@ export const Dashboard = () => {
   const { isAuthenticated, accessToken, user } = useAuth(); // Add user here
   const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEnrollments = async () => {
       try {
-        setLoading(true);
         const response = await axios.get(
           "http://127.0.0.1:8000/api/enrollments/",
           {
@@ -68,8 +67,6 @@ export const Dashboard = () => {
       } catch (err) {
         console.error("Error fetching enrollments:", err);
         setError("Failed to load enrolled courses.");
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -82,26 +79,8 @@ export const Dashboard = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            {/* Loading skeleton */}
-            <div className="h-48 bg-gray-200 rounded-2xl mb-8"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-gray-200 h-64 rounded-xl"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-gray-50 pt-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Header */}
         {user && (

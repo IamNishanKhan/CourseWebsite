@@ -19,9 +19,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string, phone: string) => Promise<void>;
+  signup: (first_name: string, last_name: string, email: string, phone: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  refreshAccessToken: () => Promise<void>;
+  refreshAccessToken: (refreshToken: string | null) => Promise<string | null>;
   setUser: (user: User | null) => void;
 }
 
@@ -36,179 +36,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const initializeAuth = async () => {
-      setIsLoading(true); // Start loading
+      setIsLoading(true);
       try {
         const storedAuth = localStorage.getItem("auth");
         if (storedAuth) {
           const authData = JSON.parse(storedAuth);
-          const { accessToken, refreshToken, user } = authData;
-
-          if (accessToken) {
-            try {
-              const response = await fetch("http://127.0.0.1:8000/api/accounts/profile/", {
-                headers: { Authorization: `Bearer ${accessToken}` },
-              });
-
-              if (response.ok) {
-                setUser(user);
-                setAccessToken(accessToken);
-                setRefreshToken(refreshToken);
-                setIsAuthenticated(true);
-                setIsLoading(false);
-                return;
-              }
-              // Token is invalid, attempt refresh
-              else {
-                try {
-                  const newAccessToken = await refreshAccessToken(refreshToken);
-                  if (newAccessToken) {
-                    // Fetch user data again with the new token
-                    const profileResponse = await fetch("http://127.0.0.1:8000/api/accounts/profile/", {
-                      headers: { Authorization: `Bearer ${newAccessToken}` },
-                    });
-
-                    if (profileResponse.ok) {
-                      const userData = await profileResponse.json();
-
-                      setUser(userData);
-                      setAccessToken(newAccessToken);
-                      setRefreshToken(refreshToken);
-                      setIsAuthenticated(true);
-
-                      // Update local storage
-                      localStorage.setItem(
-                        "auth",
-                        JSON.stringify({
-                          user: userData,
-                          accessToken: newAccessToken,
-                          refreshToken: refreshToken,
-                        })
-                      );
-                    } else {
-                      clearAuthData();
-                    }
-                  } else {
-                    clearAuthData();
-                  }
-                } catch (refreshError) {
-                  console.error("Token refresh failed during initialization:", refreshError);
-                  clearAuthData();
-                }
-              }
-            } catch (error) {
-              console.error("Error verifying token:", error);
-              clearAuthData();
-            }
-          } else {
-            clearAuthData();
-          }
-        } else {
-          clearAuthData();
+          setUser(authData.user);
+          setAccessToken(authData.accessToken);
+          setRefreshToken(authData.refreshToken);
+          setIsAuthenticated(true);
         }
+      } catch (error) {
+        console.error("Error initializing authentication:", error);
       } finally {
-        setIsLoading(false); // End loading whether successful or not
+        setIsLoading(false);
       }
     };
-
     initializeAuth();
   }, []);
 
-  const clearAuthData = () => {
-    setUser(null);
-    setAccessToken(null);
-    setRefreshToken(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem("auth");
-  };
-
-  const login = async (email: string, password: string) => {
+  const signup = async (first_name: string, last_name: string, email: string, phone: string, password: string) => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/accounts/login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) throw new Error("Login failed");
-
-      const { access, refresh } = await response.json();
-
-      const profileResponse = await fetch("http://127.0.0.1:8000/api/accounts/profile/", {
-        headers: { Authorization: `Bearer ${access}` },
-      });
-
-      if (!profileResponse.ok) throw new Error("Failed to fetch user profile");
-
-      const userData = await profileResponse.json();
-
-      setAccessToken(access);
-      setRefreshToken(refresh);
-      setIsAuthenticated(true);
-      setUser({
-        id: userData.id,
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        email: userData.email,
-        phone: userData.phone || "",
-        role: userData.role,
-        profile_picture: userData.profile_picture || null,
-        bio: userData.bio || "",
-      });
-
-      localStorage.setItem(
-        "auth",
-        JSON.stringify({
-          user: {
-            id: userData.id,
-            first_name: userData.first_name,
-            last_name: userData.last_name,
-            email: userData.email,
-            phone: userData.phone || "",
-            role: userData.role,
-            profile_picture: userData.profile_picture || null,
-            bio: userData.bio || "",
-          },
-          accessToken: access,
-          refreshToken: refresh,
-        })
-      );
-    } catch (error) {
-      console.error("Login error:", error);
-      throw error;
-    }
-  };
-
-  const signup = async (name: string, email: string, password: string, phone: string) => {
-    try {
-      const [first_name, ...lastNameParts] = name.trim().split(" ");
-      const last_name = lastNameParts.join(" ") || ""; // Provide empty string if no last name
-
       const payload = {
         first_name,
         last_name,
         email,
-        password,
         phone,
-        role: "student",
+        password
       };
-
-      const registerResponse = await fetch("http://127.0.0.1:8000/api/accounts/register/", {
+      
+      const response = await fetch("http://127.0.0.1:8000/api/accounts/register/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       });
-
-      const responseData = await registerResponse.json();
-
-      if (!registerResponse.ok) {
-        // Extract specific error message from response
-        const errorMessage = responseData.detail || Object.values(responseData).flat().join(", ") || "Registration failed";
-        throw new Error(errorMessage);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Registration failed");
       }
-
-      // After successful registration, login the user
+      
       await login(email, password);
     } catch (error: any) {
       console.error("Signup error:", error);
@@ -216,55 +83,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = async () => {
+  const login = async (email: string, password: string) => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/accounts/logout/", {
+      const response = await fetch("http://127.0.0.1:8000/api/accounts/login/", {
         method: "POST",
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
       });
-
-      if (!response.ok) console.error("Logout failed on server");
+      
+      if (!response.ok) throw new Error("Login failed");
+      
+      const { access, refresh } = await response.json();
+      
+      setAccessToken(access);
+      setRefreshToken(refresh);
+      setIsAuthenticated(true);
+      
+      const profileResponse = await fetch("http://127.0.0.1:8000/api/accounts/profile/", {
+        headers: { Authorization: `Bearer ${access}` }
+      });
+      
+      if (!profileResponse.ok) throw new Error("Failed to fetch user profile");
+      
+      const userData = await profileResponse.json();
+      setUser(userData);
+      
+      localStorage.setItem("auth", JSON.stringify({ user: userData, accessToken: access, refreshToken: refresh }));
     } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      clearAuthData();
+      console.error("Login error:", error);
+      throw error;
     }
   };
 
-  const refreshAccessToken = async (refreshToken: string | null): Promise<string | null> => {
+  const logout = async () => {
     try {
-      if (!refreshToken) throw new Error("No refresh token available");
+      await fetch("http://127.0.0.1:8000/api/accounts/logout/", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setUser(null);
+      setAccessToken(null);
+      setRefreshToken(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem("auth");
+    }
+  };
 
-      const response = await fetch("http://127.0.0.1:8000/api/token/refresh/", {
+  const refreshAccessToken = async (refreshToken: string | null) => {
+    if (!refreshToken) return null;
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/accounts/token/refresh/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh: refreshToken }),
+        body: JSON.stringify({ refresh: refreshToken })
       });
-
-      if (!response.ok) {
-        console.error("Token refresh failed:", response.statusText);
-        throw new Error("Token refresh failed");
-      }
-
+      if (!response.ok) throw new Error("Failed to refresh access token");
       const { access } = await response.json();
       setAccessToken(access);
-
-      // Optionally fetch and update user details here if needed
-      // (Example: fetchUserProfileAndUpdateState(access));
-
-      localStorage.setItem(
-        "auth",
-        JSON.stringify({
-          user: user,
-          accessToken: access,
-          refreshToken: refreshToken,
-        })
-      );
-
       return access;
     } catch (error) {
-      console.error("Token refresh error:", error);
-      clearAuthData();
+      console.error("Refresh token error:", error);
       return null;
     }
   };
@@ -279,11 +160,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signup,
     logout,
     refreshAccessToken,
-    setUser,
+    setUser
   };
 
   if (isLoading) {
-    return <div>Loading...</div>; // or a loading spinner
+    return <div>Loading...</div>;
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

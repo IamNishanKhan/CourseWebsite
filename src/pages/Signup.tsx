@@ -1,15 +1,18 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { GraduationCap, User, Mail, Lock, Phone } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext"; // Updated import
+import { useAuth } from "../contexts/AuthContext";
 import { Navigate, Link } from "react-router-dom";
 import { Input } from "../components/form/Input";
+import { toast } from 'sonner';
 
 export const Signup = () => {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { signup, isAuthenticated } = useAuth();
@@ -17,13 +20,19 @@ export const Signup = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
     setIsLoading(true);
 
     try {
-      await signup(name, email, password, phone);
+      await signup(firstName, lastName, email, phone, password);
+      toast.success("Account created successfully!");
     } catch (err: any) {
       console.error("Signup failed:", err.response ? err.response.data : err.message);
       setError(err.response?.data?.detail || "Registration failed");
+      toast.error("Registration failed");
     } finally {
       setIsLoading(false);
     }
@@ -60,13 +69,17 @@ export const Signup = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            <Input id="name" type="text" label="Full Name" value={name} onChange={setName} icon={<User className="h-5 w-5 text-gray-400" />} placeholder="John Doe" required />
+            <Input id="first_name" type="text" label="First Name" value={firstName} onChange={setFirstName} icon={<User className="h-5 w-5 text-gray-400" />} placeholder="John" required />
+
+            <Input id="last_name" type="text" label="Last Name" value={lastName} onChange={setLastName} icon={<User className="h-5 w-5 text-gray-400" />} placeholder="Doe" required />
 
             <Input id="email" type="email" label="Email address" value={email} onChange={setEmail} icon={<Mail className="h-5 w-5 text-gray-400" />} placeholder="you@example.com" required />
 
             <Input id="phone" type="tel" label="Phone Number" value={phone} onChange={setPhone} icon={<Phone className="h-5 w-5 text-gray-400" />} placeholder="01XXXXXXXXX" required />
 
             <Input id="password" type="password" label="Password" value={password} onChange={setPassword} icon={<Lock className="h-5 w-5 text-gray-400" />} placeholder="••••••••" required />
+
+            <Input id="confirm_password" type="password" label="Confirm Password" value={confirmPassword} onChange={setConfirmPassword} icon={<Lock className="h-5 w-5 text-gray-400" />} placeholder="••••••••" required />
           </div>
 
           <motion.button
