@@ -14,31 +14,14 @@ interface UserProfile {
 }
 
 export const Navbar = () => {
-  const { isAuthenticated, logout, accessToken, refreshToken } = useAuth();
+  const { isAuthenticated, logout, accessToken, refreshToken, user } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [userData, setUserData] = useState<UserProfile | null>(null);
 
-  // ✅ Fetch user profile when authenticated
-  useEffect(() => {
-    if (isAuthenticated && accessToken) {
-      axios
-        .get("http://127.0.0.1:8000/api/accounts/profile/", {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        })
-        .then((response) => {
-          setUserData(response.data);
-        })
-        .catch((error) => {
-          console.error("❌ Error fetching profile:", error);
-        });
-    }
-  }, [isAuthenticated, accessToken]);
-
-  // ✅ Proper Logout API Call (Sends Refresh Token in Body)
+  // Handle logout
   const handleLogout = async () => {
     try {
       if (!refreshToken) {
-        console.error("❌ No refresh token found");
+        console.error("No refresh token found");
         return;
       }
 
@@ -76,15 +59,18 @@ export const Navbar = () => {
               Courses
             </Link>
 
-            {isAuthenticated && userData ? (
+            {isAuthenticated && user ? (
               <>
                 <Link to="/dashboard" className="text-gray-700 hover:text-indigo-600 transition-colors">
                   Dashboard
                 </Link>
                 <div className="relative">
                   <motion.button onClick={() => setIsProfileOpen(!isProfileOpen)} className="relative p-2 rounded-full bg-white shadow-sm">
-                    {/* ✅ Show Profile Picture or Default Avatar */}
-                    {userData.profile_picture ? <img src={userData.profile_picture} alt="Profile" className="w-10 h-10 rounded-full object-cover" /> : <img src="https://cdn-icons-png.flaticon.com/512/354/354637.png" alt="Default Profile" className="w-10 h-10 rounded-full object-cover" />}
+                    {user.profile_picture ? (
+                      <img src={user.profile_picture} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <img src="https://cdn-icons-png.flaticon.com/512/354/354637.png" alt="Default Profile" className="w-10 h-10 rounded-full object-cover" />
+                    )}
                   </motion.button>
 
                   <AnimatePresence>
@@ -92,12 +78,18 @@ export const Navbar = () => {
                       <motion.div className="absolute right-0 mt-3 w-72 origin-top-right bg-white rounded-xl shadow-xl ring-1 ring-black ring-opacity-5">
                         <div className="p-4">
                           <div className="flex items-center space-x-3">
-                            <div className="flex-shrink-0">{userData.profile_picture ? <img src={userData.profile_picture} alt="Profile" className="w-12 h-12 rounded-full object-cover" /> : <img src="https://cdn-icons-png.flaticon.com/512/354/354637.png" alt="Default Profile" className="w-12 h-12 rounded-full object-cover" />}</div>
+                            <div className="flex-shrink-0">
+                              {user.profile_picture ? (
+                                <img src={user.profile_picture} alt="Profile" className="w-12 h-12 rounded-full object-cover" />
+                              ) : (
+                                <img src="https://cdn-icons-png.flaticon.com/512/354/354637.png" alt="Default Profile" className="w-12 h-12 rounded-full object-cover" />
+                              )}
+                            </div>
                             <div>
                               <p className="text-sm font-semibold text-gray-900">
-                                {userData.first_name} {userData.last_name}
+                                {user.first_name} {user.last_name}
                               </p>
-                              <p className="text-xs text-gray-500">{userData.email}</p>
+                              <p className="text-xs text-gray-500">{user.email}</p>
                             </div>
                           </div>
                         </div>
