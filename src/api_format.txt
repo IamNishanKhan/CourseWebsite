@@ -1,5 +1,7 @@
 Here is the list of API endpoints in a single line format:
 
+//this is a comment
+
 POST {{baseUrl}}/api/accounts/register/
 POST http://127.0.0.1:8000/api/accounts/login/
 PUT {{baseUrl}}/api/accounts/update/
