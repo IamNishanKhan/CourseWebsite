@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import { useAuth } from '../lib/auth';
+import { useAuth } from "../contexts/AuthContext"; // Updated import
 
 interface LoginModalProps {
   isOpen: boolean;

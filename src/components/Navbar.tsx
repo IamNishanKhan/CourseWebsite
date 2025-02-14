@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { GraduationCap, LogOut, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "../lib/auth";
+import { useAuth } from "../contexts/AuthContext"; // Updated import
 
 interface UserProfile {
   id: number;

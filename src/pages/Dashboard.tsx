@@ -11,7 +11,7 @@ import {
   Zap,
   GraduationCap,
 } from "lucide-react";
-import { useAuth } from "../lib/auth";
+import { useAuth } from "../contexts/AuthContext"; // Updated import
 import { Navigate, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { EnrolledCourseCard } from "../components/EnrolledCourseCard";
