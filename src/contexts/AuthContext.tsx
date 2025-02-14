@@ -94,28 +94,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (name: string, email: string, password: string, phone: string) => {
     try {
-      // Split the full name into first_name and last_name
       const [first_name, ...lastNameParts] = name.trim().split(' ');
-      const last_name = lastNameParts.join(' ');
+      const last_name = lastNameParts.join(' ') || ''; // Provide empty string if no last name
+
+      const payload = {
+        first_name,
+        last_name,
+        email,
+        password,
+        phone,
+        role: "student"
+      };
+
+      console.log('Registration payload:', payload); // Debug log
 
       const registerResponse = await fetch("http://127.0.0.1:8000/api/accounts/register/", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          first_name,
-          last_name,
-          email,
-          password,
-          phone,
-          role: "student" // Add default role
-        }),
+        body: JSON.stringify(payload),
       });
 
+      const responseData = await registerResponse.json();
+      console.log('Server response:', responseData); // Debug log
+
       if (!registerResponse.ok) {
-        const errorData = await registerResponse.json();
-        throw new Error(errorData.detail || "Registration failed");
+        // Extract specific error message from response
+        const errorMessage = responseData.detail || 
+                           Object.values(responseData).flat().join(', ') ||
+                           "Registration failed";
+        throw new Error(errorMessage);
       }
 
       // After successful registration, login the user
