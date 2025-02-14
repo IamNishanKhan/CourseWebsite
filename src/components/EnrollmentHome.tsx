@@ -32,7 +32,7 @@ export const EnrollmentCTA = () => {
             className="px-8 py-4 bg-indigo-600 text-white rounded-full text-lg font-semibold
                      hover:bg-indigo-700 transition-colors"
           >
-            Enroll Now and Save 20%
+            Enroll Now
           </motion.button>
         </motion.div>
       </div>

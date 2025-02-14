@@ -30,14 +30,6 @@ export const Hero = () => {
               >
                 Start Learning
               </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                className="px-6 py-4 text-gray-700 inline-flex items-center space-x-2 text-lg
-                         hover:text-indigo-600 transition-colors"
-              >
-                <Play className="w-6 h-6" />
-                <span>Watch Demo</span>
-              </motion.button>
             </div>
           </motion.div>
 
@@ -59,25 +51,19 @@ export const Hero = () => {
               />
               
               {/* Floating Tech Logos */}
-              <motion.div animate={{ y: [-10, 10, -10] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-8 right-12 w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center p-2">
+              <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-8 right-12 w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center p-2">
                 <img src="https://cdn.worldvectorlogo.com/logos/tensorflow-2.svg" alt="TensorFlow" className="w-full h-full object-contain" />
               </motion.div>
 
-              <motion.div animate={{ y: [10, -10, 10] }} transition={{ repeat: Infinity, duration: 3.5 }} className="absolute top-1/4 -left-8 w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center p-2">
+              <motion.div animate={{ y: [-80, -70, -80] }} transition={{ repeat: Infinity, duration: 3.5 }} className="absolute top-1/4 -left-8 w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center p-2">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/PyTorch_logo_icon.svg/496px-PyTorch_logo_icon.svg.png?20200318225611" alt="PyTorch" className="w-full h-full object-contain" />
               </motion.div>
 
-              <motion.div animate={{ y: [-5, 15, -5] }} transition={{ repeat: Infinity, duration: 4 }} className="absolute bottom-1/4 -right-8 w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center p-2">
+              <motion.div animate={{ y: [80, 90, 80] }} transition={{ repeat: Infinity, duration: 4 }} className="absolute bottom-1/4 -right-8 w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center p-2">
                 <img src="https://cdn.worldvectorlogo.com/logos/python-5.svg" alt="Python" className="w-full h-full object-contain" />
               </motion.div>
 
-              {/* Tech badges */}
-
-              <motion.div animate={{ y: [-8, 8, -8] }} transition={{ repeat: Infinity, duration: 3.5 }} className="absolute top-1/3 right-8 w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center p-2">
-                <img src="https://cdn.worldvectorlogo.com/logos/pandas.svg" alt="Pandas" className="w-full h-full object-contain" />
-              </motion.div>
-
-              <motion.div animate={{ y: [-12, 12, -12] }} transition={{ repeat: Infinity, duration: 4 }} className="absolute top-2/3 left-4 w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center p-2">
+              <motion.div animate={{ y: [120, 130, 120] }} transition={{ repeat: Infinity, duration: 4 }} className="absolute top-2/3 left-4 w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center p-2">
                 <img src="https://cdn.worldvectorlogo.com/logos/matlab.svg" alt="MATLAB" className="w-full h-full object-contain" />
               </motion.div>
             </div>

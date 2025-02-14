@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { Hero } from "../components/Hero";
 import { CourseCard } from "../components/CourseCard";
-import { EnrollmentCTA } from "../components/EnrollmentCTA";
+import { EnrollmentCTA } from "../components/EnrollmentHome";
 import { FAQ } from "../components/FAQ";
 
 interface Course {
@@ -19,7 +19,6 @@ interface Course {
 
 export const Home = () => {
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,8 +35,6 @@ export const Home = () => {
       } catch (err) {
         console.error("Error fetching courses:", err);
         if (isMounted) setError("Failed to load featured courses.");
-      } finally {
-        if (isMounted) setLoading(false);
       }
     };
 
@@ -66,12 +63,7 @@ export const Home = () => {
             </p>
           </motion.div>
 
-          {loading ? (
-            <p className="text-center text-gray-600">Loading featured courses...</p>
-          ) : error ? (
-            <p className="text-center text-red-600">{error}</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredCourses.map((course, index) => (
                 <motion.div
                   key={course.course_id}
@@ -83,7 +75,6 @@ export const Home = () => {
                 </motion.div>
               ))}
             </div>
-          )}
         </div>
       </section>
       <EnrollmentCTA />
