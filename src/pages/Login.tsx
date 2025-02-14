@@ -4,6 +4,7 @@ import { GraduationCap, Mail, Lock } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext"; // Updated import
 import { Navigate, Link, useNavigate } from "react-router-dom";
 import { Input } from "../components/form/Input";
+import { toast } from 'sonner';
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -22,15 +23,13 @@ export const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setEmailError(""); // Reset email error
     setIsLoading(true);
 
     try {
       await login(email, password);
+      toast.success("Logged in successfully!");
     } catch (err: any) {
-      console.error("Login failed:", err.response ? err.response.data : err.message);
-      setError(err.response?.data?.detail || "Invalid email or password");
+      toast.error(err.response?.data?.detail || "Invalid email or password");
     } finally {
       setIsLoading(false);
     }

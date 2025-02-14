@@ -4,6 +4,7 @@ import { User, Mail, Phone, Lock, Upload } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Input } from "../components/form/Input";
 import axios from "axios";
+import { toast } from 'sonner';
 
 export const Settings = () => {
   const { user, accessToken, setUser } = useAuth(); // Add setUser
@@ -83,36 +84,37 @@ export const Settings = () => {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading((prev) => ({ ...prev, profile: true }));
-    setError("");
-    setSuccess("");
+    setIsLoading(prev => ({ ...prev, profile: true }));
 
     try {
       const formPayload = new FormData();
-
+      
       if (formData.first_name) formPayload.append("first_name", formData.first_name);
       if (formData.last_name) formPayload.append("last_name", formData.last_name);
       if (profilePicture) formPayload.append("profile_picture", profilePicture);
 
-      const response = await axios.put("http://127.0.0.1:8000/api/accounts/update/", formPayload, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axios.put(
+        "http://127.0.0.1:8000/api/accounts/update/",
+        formPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       if (response.data) {
-        setSuccess("Profile updated successfully!");
-        // Update user data in context instead of reloading
+        toast.success("Profile updated successfully!");
         setUser({
           ...user!,
           ...response.data,
         });
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to update profile");
+      toast.error(err.response?.data?.detail || "Failed to update profile");
     } finally {
-      setIsLoading((prev) => ({ ...prev, profile: false }));
+      setIsLoading(prev => ({ ...prev, profile: false }));
     }
   };
 

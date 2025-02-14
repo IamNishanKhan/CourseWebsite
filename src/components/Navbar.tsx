@@ -4,6 +4,7 @@ import { GraduationCap, LogOut, BookOpen, Settings } from "lucide-react"; // Add
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext"; // Updated import
+import { toast } from 'sonner';
 
 interface UserProfile {
   id: number;
@@ -21,7 +22,7 @@ export const Navbar = () => {
   const handleLogout = async () => {
     try {
       if (!refreshToken) {
-        console.error("No refresh token found");
+        toast.error("No refresh token found");
         return;
       }
 
@@ -35,8 +36,9 @@ export const Navbar = () => {
 
       logout();
       setIsProfileOpen(false);
+      toast.success("Logged out successfully");
     } catch (error) {
-      console.error("Logout Failed:", error);
+      toast.error("Logout failed");
     }
   };
 
