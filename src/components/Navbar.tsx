@@ -99,9 +99,13 @@ export const Navbar = () => {
                             <BookOpen className="w-4 h-4 mr-3 text-indigo-500" />
                             Dashboard
                           </Link>
-                          <Link to="/settings" className="flex items-center px-4 py-2 text-sm text-gray-700 rounded-lg hover:bg-indigo-50" onClick={() => setIsProfileOpen(false)}>
+                          <Link to="/updateprofile" className="flex items-center px-4 py-2 text-sm text-gray-700 rounded-lg hover:bg-indigo-50" onClick={() => setIsProfileOpen(false)}>
                             <Settings className="w-4 h-4 mr-3 text-indigo-500" />
-                            Settings
+                            Update Profile
+                          </Link>
+                          <Link to="/changepassword" className="flex items-center px-4 py-2 text-sm text-gray-700 rounded-lg hover:bg-indigo-50" onClick={() => setIsProfileOpen(false)}>
+                            <Settings className="w-4 h-4 mr-3 text-indigo-500" />
+                            Change Password
                           </Link>
                         </div>
 
@@ -118,9 +122,14 @@ export const Navbar = () => {
                 </div>
               </>
             ) : (
-              <Link to="/login" className="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                Login
-              </Link>
+              <div>
+                <Link to="/login" className="px-4 py-2 rounded-md mr-2 text-white bg-indigo-600 hover:bg-indigo-700">
+                  Login
+                </Link> 
+                <Link to="/signup" className="px-4 py-2 rounded-md text-white ml-2 bg-indigo-600 hover:bg-indigo-700">
+                  Signup
+                </Link>
+              </div>
             )}
           </div>
         </div>

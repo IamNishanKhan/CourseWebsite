@@ -60,13 +60,17 @@ export const Signup = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            <Input id="name" type="text" label="Full Name" value={name} onChange={setName} icon={<User className="h-5 w-5 text-gray-400" />} placeholder="John Doe" required />
+            <Input id="firstname" type="text" label="Fast Name" value={name} onChange={setName} icon={<User className="h-5 w-5 text-gray-400" />} placeholder="John Doe" required />
+
+            <Input id="lastname" type="text" label="Last Name" value={name} onChange={setName} icon={<User className="h-5 w-5 text-gray-400" />} placeholder="John Doe" required />
 
             <Input id="email" type="email" label="Email address" value={email} onChange={setEmail} icon={<Mail className="h-5 w-5 text-gray-400" />} placeholder="you@example.com" required />
 
             <Input id="phone" type="tel" label="Phone Number" value={phone} onChange={setPhone} icon={<Phone className="h-5 w-5 text-gray-400" />} placeholder="01XXXXXXXXX" required />
 
-            <Input id="password" type="password" label="Password" value={password} onChange={setPassword} icon={<Lock className="h-5 w-5 text-gray-400" />} placeholder="••••••••" required />
+            <Input id="password1" type="password" label="Password" value={password} onChange={setPassword} icon={<Lock className="h-5 w-5 text-gray-400" />} placeholder="••••••••" required />
+
+            <Input id="password2" type="password" label="Password" value={password} onChange={setPassword} icon={<Lock className="h-5 w-5 text-gray-400" />} placeholder="••••••••" required />
           </div>
 
           <motion.button

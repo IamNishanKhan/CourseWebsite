@@ -81,10 +81,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 Sign In
               </motion.button>
             </form>
-            
-            <p className="mt-4 text-sm text-gray-600 text-center">
-              Demo credentials: demo@example.com / password
-            </p>
           </motion.div>
         </motion.div>
       )}
