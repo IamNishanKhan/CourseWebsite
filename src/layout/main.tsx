@@ -1,16 +1,16 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
+import { ScrollToTop } from "../components/ScrollToTop";
 import { Footer } from "../components/Footer";
 
 export const MainLayout = () => {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <>
+      <ScrollToTop />
       <Navbar />
-      <main className="flex-grow">
-        <Outlet />
-      </main>
+      <Outlet />
       <Footer />
-    </div>
+    </>
   );
 };
