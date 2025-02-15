@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
-import { Clock, Users, Star, ChevronDown, CheckCircle, BookOpen } from "lucide-react";
+import { Clock, Star, ChevronDown, BookOpen } from "lucide-react";
 import * as Accordion from "@radix-ui/react-accordion";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
