@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { GraduationCap, User, Mail, Lock, Phone } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate, Link, useNavigate } from "react-router-dom";
 import { Input } from "../components/form/Input";
 import { EmailVerification } from "../components/EmailVerification";
 import { toast } from "sonner";
+import axios from "axios";
 
 export const Signup = () => {
   const [firstName, setFirstName] = useState("");
@@ -16,10 +17,12 @@ export const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showVerification, setShowVerification] = useState(false); // Controls email verification screen
-  const { signup, isAuthenticated } = useAuth();
+  const [showVerification, setShowVerification] = useState(false);
+  const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  // ✅ Handle Registration API Call
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -33,21 +36,49 @@ export const Signup = () => {
       return;
     }
 
-    // If everything is fine, move to email verification
-    setShowVerification(true);
+    setIsLoading(true);
+    try {
+      // Send registration request
+      await axios.post("http://127.0.0.1:8000/api/accounts/register/", {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        phone: phone,
+        password: password,
+      });
+
+      // ✅ Move to email verification screen
+      setShowVerification(true);
+      toast.success("OTP sent to your email. Please verify.");
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Registration failed");
+      toast.error("Registration failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSignup = async () => {
+  // ✅ Handle OTP Verification
+  const handleOTPVerification = async (otpCode: string) => {
     setIsLoading(true);
     setError("");
 
     try {
-      await signup(firstName, lastName, email, phone, password);
-      toast.success("Account created successfully!");
+      const response = await axios.post("http://127.0.0.1:8000/api/accounts/verify-otp/", {
+        email: email,
+        otp_code: otpCode,
+      });
+
+      toast.success(response.data.message || "Email verified successfully!");
+
+      // ✅ Automatically login after OTP verification
+      await login(email, password);
+
+      // ✅ Redirect to dashboard
+      navigate("/dashboard");
     } catch (err: any) {
-      console.error("Signup failed:", err.response ? err.response.data : err.message);
-      setError(err.response?.data?.detail || "Registration failed");
-      toast.error("Registration failed");
+      setError(err.response?.data?.error || "OTP verification failed");
+      toast.error("Invalid OTP. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -72,12 +103,6 @@ export const Signup = () => {
             </motion.div>
           </Link>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Create your account</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Sign in
-            </Link>
-          </p>
         </div>
 
         {error && (
@@ -90,93 +115,85 @@ export const Signup = () => {
           </motion.div>
         )}
 
-        {/* Show Email Verification only after form submission */}
         {showVerification ? (
           <EmailVerification
             email={email}
-            onVerificationComplete={handleSignup}
+            onVerificationComplete={(otpCode) => handleOTPVerification(otpCode)}
             onBack={() => setShowVerification(false)}
           />
         ) : (
           <form className="mt-8 space-y-6" onSubmit={handleFormSubmit}>
             <div className="space-y-4">
-              <Input
-                id="first_name"
-                type="text"
-                label="First Name"
-                value={firstName}
-                onChange={setFirstName}
-                icon={<User className="h-5 w-5 text-gray-400" />}
-                placeholder="First Name"
-                required
+            <Input
+
+              id="first_name"
+              type="text"
+              label="First Name"
+              value={firstName}
+              onChange={setFirstName}
+              icon={<User className="h-5 w-5 text-gray-400" />}
+              placeholder="First Name"
+              required
               />
 
               <Input
-                id="last_name"
-                type="text"
-                label="Last Name"
-                value={lastName}
-                onChange={setLastName}
-                icon={<User className="h-5 w-5 text-gray-400" />}
-                placeholder="Last Name"
-                required
+              id="last_name"
+              type="text"
+              label="Last Name"
+              value={lastName}
+              onChange={setLastName}
+              icon={<User className="h-5 w-5 text-gray-400" />}
+              placeholder="Last Name"
+              required
               />
 
               <Input
-                id="email"
-                type="email"
-                label="Email address"
-                value={email}
-                onChange={setEmail}
-                icon={<Mail className="h-5 w-5 text-gray-400" />}
-                placeholder="you@email.com"
-                required
+              id="email"
+              type="email"
+              label="Email address"
+              value={email}
+              onChange={setEmail}
+              icon={<Mail className="h-5 w-5 text-gray-400" />}
+              placeholder="you@email.com"
+              required
               />
 
               <Input
-                id="phone"
-                type="tel"
-                label="Phone Number"
-                value={phone}
-                onChange={setPhone}
-                icon={<Phone className="h-5 w-5 text-gray-400" />}
-                placeholder="+880XXXXXXXXXX"
-                required
+              id="phone"
+              type="tel"
+              label="Phone Number"
+              value={phone}
+              onChange={setPhone}
+              icon={<Phone className="h-5 w-5 text-gray-400" />}
+              placeholder="+880XXXXXXXXXX"
+              required
               />
 
               <Input
-                id="password"
-                type="password"
-                label="Password"
-                value={password}
-                onChange={setPassword}
-                icon={<Lock className="h-5 w-5 text-gray-400" />}
-                placeholder="••••••••"
-                required
+              id="password"
+              type="password"
+              label="Password"
+              value={password}
+              onChange={setPassword}
+              icon={<Lock className="h-5 w-5 text-gray-400" />}
+              placeholder="••••••••"
+              required
               />
 
               <Input
-                id="confirm_password"
-                type="password"
-                label="Confirm Password"
-                value={confirmPassword}
-                onChange={setConfirmPassword}
-                icon={<Lock className="h-5 w-5 text-gray-400" />}
-                placeholder="••••••••"
-                required
+              id="confirm_password"
+              type="password"
+              label="Confirm Password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              icon={<Lock className="h-5 w-5 text-gray-400" />}
+              placeholder="••••••••"
+              required
               />
             </div>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={isLoading}
-              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md
-                      shadow-sm text-sm font-medium text-white bg-indigo-600 
-                      ${isLoading ? "opacity-75 cursor-not-allowed" : "hover:bg-indigo-700"}
-                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
-            >
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={isLoading}
+              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 
+              ${isLoading ? "opacity-75 cursor-not-allowed" : "hover:bg-indigo-700"} focus:outline-none`}>
               {isLoading ? "Processing..." : "Create Account"}
             </motion.button>
           </form>
