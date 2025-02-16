@@ -46,6 +46,14 @@ interface Module {
   lessons: Lesson[];
 }
 
+// Add this interface after other interfaces
+interface VideoProgress {
+  video_id: number;
+  completed: boolean;
+  last_watched: string | null;
+}
+
+// Update the EnrolledCourse interface to include progress
 interface EnrolledCourse {
   course_id: number;
   course_title: string;
@@ -57,6 +65,13 @@ interface EnrolledCourse {
   modules: Module[];
   outcomes: string[];
   prerequisites: string[];
+  progress: {
+    completed_videos: number;
+    total_videos: number;
+    percentage: number;
+    status: 'in_progress' | 'completed';
+    video_progress: VideoProgress[];
+  };
 }
 
 // Add this utility function at the top of the file, before the interfaces
@@ -87,9 +102,34 @@ export const CourseProgress = () => {
             }
           }
         );
-        setCourse(response.data);
-        if (response.data.modules[0]?.lessons[0]?.videos[0]) {
-          setSelectedVideo(response.data.modules[0].lessons[0].videos[0]);
+
+        // Add dummy progress data
+        const courseData = response.data;
+        const totalVideos = courseData.modules.reduce(
+          (total, module) => total + module.lessons.reduce(
+            (lessonTotal, lesson) => lessonTotal + lesson.videos.length, 0
+          ), 0
+        );
+
+        const dummyProgress = {
+          completed_videos: Math.floor(totalVideos * 0.3), // 30% completion
+          total_videos: totalVideos,
+          percentage: Math.floor((totalVideos * 0.3) / totalVideos * 100),
+          status: 'in_progress' as const,
+          video_progress: courseData.modules.flatMap(module =>
+            module.lessons.flatMap(lesson =>
+              lesson.videos.map(video => ({
+                video_id: video.video_id,
+                completed: Math.random() > 0.7, // 30% chance of being completed
+                last_watched: new Date().toISOString()
+              }))
+            )
+          )
+        };
+
+        setCourse({ ...courseData, progress: dummyProgress });
+        if (courseData.modules[0]?.lessons[0]?.videos[0]) {
+          setSelectedVideo(courseData.modules[0].lessons[0].videos[0]);
         }
       } catch (err) {
         console.error('Error fetching course data:', err);
@@ -143,9 +183,44 @@ export const CourseProgress = () => {
     );
   }
 
+  // Add default progress values
+  const defaultProgress = {
+    completed_videos: 0,
+    total_videos: 0,
+    percentage: 0,
+    status: 'in_progress' as const,
+    video_progress: []
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Course Header */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{course.course_title}</h1>
+              <p className="text-lg text-gray-600 mb-2">Instructor: {course.instructor_name}</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <div className="text-2xl font-bold text-indigo-600">
+                  {course.progress?.percentage ?? defaultProgress.percentage}%
+                </div>
+                <div className="text-sm text-gray-500">Completed</div>
+              </div>
+              <div className="h-16 w-16 rounded-full border-4 border-indigo-100 flex items-center justify-center">
+                <div 
+                  className="h-14 w-14 rounded-full border-4 border-indigo-600"
+                  style={{
+                    background: `conic-gradient(#4f46e5 ${(course.progress?.percentage ?? 0) * 3.6}deg, #e0e7ff ${(course.progress?.percentage ?? 0) * 3.6}deg)`
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Video Player Column */}
           <div className="lg:col-span-2 space-y-6">
@@ -156,7 +231,7 @@ export const CourseProgress = () => {
                 className="bg-white rounded-xl shadow-lg overflow-hidden"
               >
                 <div className="relative w-full" style={{ maxWidth: '960px', margin: '0 auto' }}>
-                  <div className="aspect-auto">
+                  <div className="aspect-w-16 aspect-h-9">
                     <iframe
                       src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedVideo.video_link)}`}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -166,9 +241,20 @@ export const CourseProgress = () => {
                   </div>
                 </div>
                 <div className="p-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    {selectedVideo.video_title}
-                  </h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {selectedVideo.video_title}
+                    </h2>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      course.progress.video_progress.find(v => v.video_id === selectedVideo.video_id)?.completed
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {course.progress.video_progress.find(v => v.video_id === selectedVideo.video_id)?.completed
+                        ? 'Completed'
+                        : 'In Progress'}
+                    </span>
+                  </div>
                   <p className="text-gray-600">{course.description}</p>
                 </div>
               </motion.div>
@@ -184,7 +270,17 @@ export const CourseProgress = () => {
           {/* Course Content Column */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Course Content</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Course Content</h2>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  course.progress.status === 'completed'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {course.progress.status === 'completed' ? 'Completed' : 'In Progress'}
+                </span>
+              </div>
+              
               <Accordion.Root type="single" collapsible className="space-y-4">
                 {course.modules.map((module) => (
                   <Accordion.Item
@@ -218,14 +314,34 @@ export const CourseProgress = () => {
                                 <motion.button
                                   key={video.video_id}
                                   onClick={() => setSelectedVideo(video)}
-                                  className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left
+                                  className={`w-full flex items-center justify-between p-2 rounded-lg text-left
                                     ${selectedVideo?.video_id === video.video_id
                                       ? 'bg-indigo-50 text-indigo-600'
                                       : 'hover:bg-gray-50 text-gray-600 hover:text-indigo-600'
                                     } transition-colors duration-200`}
                                 >
-                                  <PlayCircle className="w-5 h-5 flex-shrink-0" />
-                                  <span className="text-sm">{video.video_title}</span>
+                                  <div className="flex items-center space-x-3">
+                                    <PlayCircle className="w-5 h-5 flex-shrink-0" />
+                                    <div>
+                                      <span className="text-sm">{video.video_title}</span>
+                                      <div className="flex items-center mt-1">
+                                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                          course.progress.video_progress.find(v => v.video_id === video.video_id)?.completed
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-yellow-100 text-yellow-700'
+                                        }`}>
+                                          {course.progress.video_progress.find(v => v.video_id === video.video_id)?.completed
+                                            ? 'Completed'
+                                            : 'Not completed'}
+                                        </span>
+                                       
+                                        
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {course.progress.video_progress.find(v => v.video_id === video.video_id)?.completed && (
+                                    <span className="text-green-600">✓</span>
+                                  )}
                                 </motion.button>
                               ))}
                               {lesson.resources.map((resource) => (
