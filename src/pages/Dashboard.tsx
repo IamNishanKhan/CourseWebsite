@@ -4,6 +4,7 @@ import { Mail, BookOpen, Calendar, GraduationCap, ChevronRight } from "lucide-re
 import { useAuth } from "../contexts/AuthContext";
 import { Navigate, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { CourseCard } from '../components/CourseCard';
 
 interface DashboardResponse {
   welcome_message: string;
@@ -154,36 +155,37 @@ export const Dashboard = () => {
                 </Link>
               </motion.div>
             ) : (
+              // Replace the enrolled courses grid section with this:
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {dashboardData.enrollments.map((enrollment, index) => (
-                  <motion.div key={enrollment.enrollment_id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                    <div className="relative h-48">
-                      <img src={enrollment.course.thumbnail || "https://via.placeholder.com/400x300"} alt={enrollment.course.course_title} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <h3 className="text-xl font-bold text-white mb-1 line-clamp-2">{enrollment.course.course_title}</h3>
-                        <p className="text-sm text-gray-200">by {enrollment.course.instructor_name}</p>
-                      </div>
-                    </div>
+                {dashboardData.enrollments.map((enrollment, index) => {
+                  // Transform enrollment data to match CourseCard props
+                  const courseData = {
+                    course_id: enrollment.course.course_id,
+                    category: enrollment.course.category_id,
+                    category_name: enrollment.course.category_name,
+                    instructor_name: enrollment.course.instructor_name,
+                    course_title: enrollment.course.course_title,
+                    description: enrollment.course.description,
+                    price: '', // Empty price as we don't want to show it
+                    thumbnail: enrollment.course.thumbnail,
+                    created_at: enrollment.enrolled_at,
+                    isEnrolled: true, // Add this flag to indicate it's an enrolled course
+                  };
 
-                    <div className="p-4">
-                      <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
-                        <Calendar className="w-4 h-4" />
-                        <span>Enrolled on {new Date(enrollment.enrolled_at).toLocaleDateString()}</span>
-                      </div>
-
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        onClick={() => navigate(`/course/${enrollment.course.course_id}/progress`)}
-                        className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-indigo-600 
-                                 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                      >
-                        <span>Continue Learning</span>
-                        <ChevronRight className="w-4 h-4" />
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                ))}
+                  return (
+                    <motion.div
+                      key={enrollment.enrollment_id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <CourseCard 
+                        course={courseData} 
+                        onContinue={() => navigate(`/course/${enrollment.course.course_id}/progress`)}
+                      />
+                    </motion.div>
+                  );
+                })}
               </div>
             )}
           </AnimatePresence>
