@@ -1,18 +1,24 @@
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useParams, useLocation, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   BookOpen,
   PlayCircle,
   Download,
   ChevronDown,
-  GraduationCap,
+  
+  User,
+  Tag,
+  Clock,
+  
+  
+  LibraryBig,
 } from 'lucide-react';
 import * as Accordion from '@radix-ui/react-accordion';
 
 import { useAuth } from '../contexts/AuthContext';  // Add this import at the top
-import { Navigate } from 'react-router-dom';
+
 
 interface Video {
   video_id: number;
@@ -59,6 +65,7 @@ interface EnrolledCourse {
   course_title: string;
   description: string;
   price: string;
+  thumbnail:string;
   category_id: number;
   category_name: string;
   instructor_name: string;
@@ -81,9 +88,12 @@ const getYouTubeVideoId = (url: string): string => {
   return match && match[2].length === 11 ? match[2] : '';
 };
 
+import { api } from '../lib/axios'; // Add this import
+
 export const CourseProgress = () => {
   const { id } = useParams();
-  const { accessToken, isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const location = useLocation(); // Now this will work
   const [course, setCourse] = useState<EnrolledCourse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,23 +104,15 @@ export const CourseProgress = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/enrolled-course/${id}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`
-            }
-          }
-        );
-
-        // Add dummy progress data
+        const response = await api.get(`/enrolled-course/${id}/`);
         const courseData = response.data;
+        
         const totalVideos = courseData.modules.reduce(
           (total, module) => total + module.lessons.reduce(
             (lessonTotal, lesson) => lessonTotal + lesson.videos.length, 0
           ), 0
         );
-
+        
         const dummyProgress = {
           completed_videos: Math.floor(totalVideos * 0.3), // 30% completion
           total_videos: totalVideos,
@@ -126,11 +128,12 @@ export const CourseProgress = () => {
             )
           )
         };
-
+        
         setCourse({ ...courseData, progress: dummyProgress });
-        if (courseData.modules[0]?.lessons[0]?.videos[0]) {
-          setSelectedVideo(courseData.modules[0].lessons[0].videos[0]);
-        }
+        // Remove this part:
+        // if (courseData.modules[0]?.lessons[0]?.videos[0]) {
+        //   setSelectedVideo(courseData.modules[0].lessons[0].videos[0]);
+        // }
       } catch (err) {
         console.error('Error fetching course data:', err);
         if (axios.isAxiosError(err)) {
@@ -147,13 +150,33 @@ export const CourseProgress = () => {
       }
     };
 
-    if (id && accessToken) {
+    // Only fetch if we have completed auth initialization and are authenticated
+    if (!authLoading && isAuthenticated) {
       fetchCourseData();
     }
-  }, [id, accessToken]);
+  }, [id, authLoading, isAuthenticated]); // Add authLoading and isAuthenticated to dependencies
 
+  // Wait for auth to initialize before checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse space-y-8">
+            <div className="h-96 bg-gray-200 rounded-xl" />
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-24 bg-gray-200 rounded-lg" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check authentication after auth is initialized
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: `/course/${id}/progress` }} replace />;
   }
 
   if (loading) {
@@ -196,28 +219,73 @@ export const CourseProgress = () => {
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Course Header */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{course.course_title}</h1>
-              <p className="text-lg text-gray-600 mb-2">Instructor: {course.instructor_name}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <div className="text-2xl font-bold text-indigo-600">
-                  {course.progress?.percentage ?? defaultProgress.percentage}%
-                </div>
-                <div className="text-sm text-gray-500">Completed</div>
+        <div className="relative bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+          {/* Background Image with Overlay */}
+          <div className="absolute inset-0">
+            <img
+             src={`http://127.0.0.1:8000${course.thumbnail}`}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/70 to-transparent" />
+          </div>
+
+          {/* Content */}
+          <div className="relative p-8 md:p-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="max-w-3xl"
+            >
+              {/* Category Badge */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center mb-4 px-4 py-2 rounded-full 
+                          bg-white/10 backdrop-blur-md border border-white/20"
+              >
+                <Tag className="w-4 h-4 text-white mr-2" />
+                <span className="text-sm font-medium text-white">{course.category_name}</span>
+              </motion.div>
+
+              {/* Title */}
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">
+                {course.course_title}
+              </h1>
+
+              {/* Meta Information */}
+              <div className="flex flex-wrap items-center gap-6 text-white/90">
+                {/* Instructor */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-center space-x-2"
+                >
+                  <div className="p-2 rounded-full bg-white/10 backdrop-blur-md">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <span className="text-lg">{course.instructor_name}</span>
+                </motion.div>
+
+               
+
+                {/* Total Videos */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex items-center space-x-2"
+                >
+                  <div className="p-2 rounded-full bg-white/10 backdrop-blur-md">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <span className="text-lg">{course.progress.total_videos} Videos</span>
+                </motion.div>
               </div>
-              <div className="h-16 w-16 rounded-full border-4 border-indigo-100 flex items-center justify-center">
-                <div 
-                  className="h-14 w-14 rounded-full border-4 border-indigo-600"
-                  style={{
-                    background: `conic-gradient(#4f46e5 ${(course.progress?.percentage ?? 0) * 3.6}deg, #e0e7ff ${(course.progress?.percentage ?? 0) * 3.6}deg)`
-                  }}
-                />
-              </div>
-            </div>
+            </motion.div>
           </div>
         </div>
 
@@ -225,45 +293,62 @@ export const CourseProgress = () => {
           {/* Video Player Column */}
           <div className="lg:col-span-2 space-y-6">
             {selectedVideo ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-white rounded-xl shadow-lg overflow-hidden"
-              >
-                <div className="relative w-full" style={{ maxWidth: '960px', margin: '0 auto' }}>
-                  <div className="aspect-w-16 aspect-h-9">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedVideo.video_link)}`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="w-full h-[540px] rounded-t-xl"
-                    />
+              <div className="space-y-6"> {/* Added wrapper div with spacing */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden"
+                >
+                  <div className="relative w-full" style={{ maxWidth: '960px', margin: '0 auto' }}>
+                    <div className="aspect-w-16 aspect-h-9">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedVideo.video_link)}`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-auto rounded-t-xl"
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold text-gray-900">
+                </motion.div>
+            
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className=" rounded-xl  bg-white shadow-lg p-6"
+                >
+                  <div className="flex items-center justify-start">
+                    <h2 className="text-2xl  font-bold text-gray-900">
                       {selectedVideo.video_title}
                     </h2>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      course.progress.video_progress.find(v => v.video_id === selectedVideo.video_id)?.completed
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {course.progress.video_progress.find(v => v.video_id === selectedVideo.video_id)?.completed
-                        ? 'Completed'
-                        : 'In Progress'}
-                    </span>
                   </div>
-                  <p className="text-gray-600">{course.description}</p>
+                </motion.div>
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-xl shadow-lg p-12 text-center"
+              >
+                <div className="flex flex-col items-center space-y-6">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                  >
+                    <PlayCircle className="w-24 h-24 text-indigo-600/30" />
+                  </motion.div>
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+                      Ready to Start Learning?
+                    </h3>
+                    <p className="text-gray-600 max-w-md mx-auto">
+                      Select a lesson from the course content to begin your learning journey.
+                      The video player will appear here once you choose a video.
+                    </p>
+                  </div>
+                  
                 </div>
               </motion.div>
-            ) : (
-              <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-                <GraduationCap className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900">No video selected</h3>
-                <p className="text-gray-600">Please select a video from the course content</p>
-              </div>
             )}
           </div>
 
@@ -272,13 +357,7 @@ export const CourseProgress = () => {
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Course Content</h2>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  course.progress.status === 'completed'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {course.progress.status === 'completed' ? 'Completed' : 'In Progress'}
-                </span>
+                
               </div>
               
               <Accordion.Root type="single" collapsible className="space-y-4">
@@ -291,7 +370,7 @@ export const CourseProgress = () => {
                     <Accordion.Trigger className="w-full flex justify-between items-center p-4 text-left group">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors duration-200">
-                          <BookOpen className="w-5 h-5 text-indigo-600" />
+                          <LibraryBig className="w-5 h-5 text-indigo-600" />
                         </div>
                         <div>
                           <span className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">
@@ -304,60 +383,64 @@ export const CourseProgress = () => {
                       </div>
                       <ChevronDown className="w-5 h-5 text-gray-500 transform transition-transform duration-200 group-data-[state=open]:rotate-180" />
                     </Accordion.Trigger>
+                    
                     <Accordion.Content className="overflow-hidden data-[state=open]:animate-slideDown data-[state=closed]:animate-slideUp">
                       <div className="p-4 bg-white space-y-4">
                         {module.lessons.map((lesson) => (
-                          <div key={lesson.lesson_id} className="space-y-3">
-                            <h3 className="font-semibold text-gray-900">{lesson.lesson_title}</h3>
-                            <div className="space-y-2">
-                              {lesson.videos.map((video) => (
-                                <motion.button
-                                  key={video.video_id}
-                                  onClick={() => setSelectedVideo(video)}
-                                  className={`w-full flex items-center justify-between p-2 rounded-lg text-left
-                                    ${selectedVideo?.video_id === video.video_id
-                                      ? 'bg-indigo-50 text-indigo-600'
-                                      : 'hover:bg-gray-50 text-gray-600 hover:text-indigo-600'
-                                    } transition-colors duration-200`}
-                                >
-                                  <div className="flex items-center space-x-3">
-                                    <PlayCircle className="w-5 h-5 flex-shrink-0" />
-                                    <div>
-                                      <span className="text-sm">{video.video_title}</span>
-                                      <div className="flex items-center mt-1">
-                                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                          course.progress.video_progress.find(v => v.video_id === video.video_id)?.completed
-                                            ? 'bg-green-100 text-green-700'
-                                            : 'bg-yellow-100 text-yellow-700'
-                                        }`}>
-                                          {course.progress.video_progress.find(v => v.video_id === video.video_id)?.completed
-                                            ? 'Completed'
-                                            : 'Not completed'}
-                                        </span>
-                                       
-                                        
-                                      </div>
-                                    </div>
+                          <Accordion.Root
+                            key={lesson.lesson_id}
+                            type="single"
+                            collapsible
+                          >
+                            <Accordion.Item value={`lesson-${lesson.lesson_id}`}>
+                              <Accordion.Trigger className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-white group hover:from-indigo-50 hover:to-white transition-all duration-300 rounded-lg">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 rounded-lg bg-indigo-100/50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors duration-200">
+                                    <BookOpen className="w-4 h-4 text-indigo-600" />
                                   </div>
-                                  {course.progress.video_progress.find(v => v.video_id === video.video_id)?.completed && (
-                                    <span className="text-green-600">✓</span>
-                                  )}
-                                </motion.button>
-                              ))}
-                              {lesson.resources.map((resource) => (
-                                <a
-                                  key={resource.resource_id}
-                                  href={resource.resource_link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:text-indigo-600 hover:bg-gray-50 transition-colors duration-200"
-                                >
-                                  <Download className="w-5 h-5 flex-shrink-0" />
-                                  <span className="text-sm">{resource.resource_title}</span>
-                                </a>
-                              ))}
-                            </div>
-                          </div>
+                                  <span className="text-sm text-left text-gray-700 group-hover:text-indigo-600 transition-colors duration-200">
+                                    {lesson.lesson_title}
+                                  </span>
+                                </div>
+                                <ChevronDown className="w-4 h-4 text-gray-400 transform transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                              </Accordion.Trigger>
+                              
+                              <Accordion.Content className="overflow-hidden data-[state=open]:animate-slideDown data-[state=closed]:animate-slideUp">
+                                <div className="p-3 space-y-2 pl-11">
+                                  {lesson.videos.map((video) => (
+                                    <motion.button
+                                      key={video.video_id}
+                                      onClick={() => setSelectedVideo(video)}
+                                      whileHover={{ x: 4 }}
+                                      className={`w-full flex items-center p-2 rounded-lg text-left
+                                        ${selectedVideo?.video_id === video.video_id
+                                          ? 'bg-indigo-50 text-indigo-600'
+                                          : 'hover:bg-gray-50 text-gray-600 hover:text-indigo-600'
+                                        } transition-all duration-200`}
+                                    >
+                                      <div className="flex items-center space-x-3">
+                                        <PlayCircle className="w-4 h-4 flex-shrink-0" />
+                                        <span className="text-sm">{video.video_title}</span>
+                                      </div>
+                                    </motion.button>
+                                  ))}
+                                  {lesson.resources.map((resource) => (
+                                    <motion.a
+                                      key={resource.resource_id}
+                                      href={resource.resource_link}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      whileHover={{ x: 4 }}
+                                      className="w-full flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:text-indigo-600 hover:bg-gray-50 transition-all duration-200"
+                                    >
+                                      <Download className="w-4 h-4 flex-shrink-0" />
+                                      <span className="text-sm">{resource.resource_title}</span>
+                                    </motion.a>
+                                  ))}
+                                </div>
+                              </Accordion.Content>
+                            </Accordion.Item>
+                          </Accordion.Root>
                         ))}
                       </div>
                     </Accordion.Content>
