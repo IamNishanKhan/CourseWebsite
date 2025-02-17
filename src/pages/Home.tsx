@@ -9,6 +9,7 @@ import { FAQ } from "../components/FAQ";
 interface Course {
   course_id: number;
   category: number;
+  category_name: string;
   instructor_name: string;
   title: string;
   description: string;
@@ -29,6 +30,8 @@ export const Home = () => {
         const { data: coursesData } = await axios.get<Course[]>(
           "http://127.0.0.1:8000/api/courses/"
         );
+
+        console.log("Fetched Courses:", coursesData); // ✅ Debugging Log
 
         if (!isMounted) return;
         setFeaturedCourses(coursesData.slice(0, 6));
@@ -63,18 +66,28 @@ export const Home = () => {
             </p>
           </motion.div>
 
+          {error && (
+            <p className="text-red-500 text-center mb-4">{error}</p>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredCourses.map((course, index) => (
+            {featuredCourses.length > 0 ? (
+              featuredCourses.map((course, index) => (
                 <motion.div
                   key={course.course_id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <CourseCard {...course} />
+                  <CourseCard course={course} /> 
                 </motion.div>
-              ))}
-            </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 col-span-full">
+                No courses available
+              </p>
+            )}
+          </div>
         </div>
       </section>
       <EnrollmentCTA />
